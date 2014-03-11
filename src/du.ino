@@ -1,3 +1,4 @@
+#include "dht11.h"
 #include <Servo.h>
 
 
@@ -12,6 +13,7 @@ char val[4];
 char aux[4];
 
 Servo servo;
+dht11 DHT11;
 
 void setup() {
   Serial.begin(115200);
@@ -65,6 +67,7 @@ void process() {
     case 2:  dr(pin,val);              break;
     case 3:  aw(pin,val);              break;
     case 4:  ar(pin,val);              break;
+    case 10: handle_dht11(pin);        break;
     case 97: handlePing(pin,val,aux);  break;
     case 98: handleServo(pin,val,aux); break;
     case 99: toggleDebug(val);         break;
@@ -249,4 +252,34 @@ void handleServo(char *pin, char *val, char *aux) {
     sprintf(m, "%s::read::%03d", pin, sval);
     Serial.println(m);
   }
+}
+
+void handle_dht11(char *pin) {
+if (debug) {
+    Serial.println("dht11"); }
+    
+  int p = getPin(pin);
+  if (p == -1 && debug) {
+    Serial.println("badpin"); 
+  } else {
+    int chk = DHT11.read(p);    
+   switch (chk)
+   {
+   case DHTLIB_OK: 
+        char m[9];
+        sprintf(m, "%02d::%03d::%03d", p,DHT11.humidity, DHT11.temperature);
+        Serial.println(m);
+	break;
+   case DHTLIB_ERROR_CHECKSUM: 
+	Serial.println("Checksum error"); 
+	break;
+   case DHTLIB_ERROR_TIMEOUT: 
+	Serial.println("Time out error"); 
+	break;
+   default: 
+	Serial.println("Unknown error"); 
+	break;
+   }
+  
+  }  
 }
